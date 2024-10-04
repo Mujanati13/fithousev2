@@ -1,24 +1,38 @@
-import React, { useState } from "react";
-import { Menu, Card, Col, Row, Typography, Collapse } from "antd";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AppstoreOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
   HomeOutlined,
-  ReconciliationOutlined,
-  FundOutlined,
   PieChartOutlined,
   NotificationOutlined,
   CreditCardOutlined,
+  AppstoreOutlined,
   ClockCircleOutlined,
   LayoutOutlined,
+  BookOutlined,
   UserOutlined,
   ContactsOutlined,
-  BookOutlined,
   FieldTimeOutlined,
-  LogoutOutlined,
+  FundOutlined,
+  ReconciliationOutlined,
   CopyOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
-
+import {
+  Layout,
+  Menu,
+  theme,
+  Button,
+  Card,
+  Typography,
+  Switch,
+  Space,
+  Tooltip,
+  Row,
+  Col,
+  Collapse,
+} from "antd";
 // Import your other components
 import Etablisiment from "../../../pages/screens/etablisimment";
 import Client from "../../../pages/screens/client";
@@ -44,101 +58,123 @@ import Fournisseur from "../../screens/fournisseur";
 import Servies from "../../screens/servies";
 import ReservationService from "../../screens/reservation_srv";
 
+const { Header, Sider, Content } = Layout;
 const { Title } = Typography;
 const { Panel } = Collapse;
 
-const menuItems = [
-  { title: "Établissement", icon: <HomeOutlined />, key: "11" },
-  { title: "Dashboard", icon: <PieChartOutlined fill="#4E89FF" />, key: "12" },
-  { title: "Notification", icon: <NotificationOutlined />, key: "13" },
-  { title: "Transactions", icon: <CreditCardOutlined />, key: "14" },
-  { title: "Abonnements", icon: <AppstoreOutlined />, key: "18" },
-  { title: "Séance", icon: <ClockCircleOutlined />, key: "151" },
-  { title: "Salle", icon: <LayoutOutlined />, key: "152" },
-  { title: "Cours", icon: <BookOutlined />, key: "153" },
-  { title: "Clients", icon: <UserOutlined />, key: "21" },
-  { title: "Contrats", icon: <ContactsOutlined />, key: "22" },
-  { title: "Réservations", icon: <BookOutlined />, key: "23" },
-  { title: "Staff", icon: <UserOutlined />, key: "31" },
-  { title: "Période", icon: <FieldTimeOutlined />, key: "32" },
-  { title: "Paiement", icon: <FundOutlined />, key: "33" },
-  { title: "Contrat Staff", icon: <ReconciliationOutlined />, key: "35" },
-  { title: "Journal des événements", icon: <CopyOutlined />, key: "41" },
-];
+const MenuPrime = () => {
+  const [collapsed, setCollapsed] = useState(false);
+  const [selectedComponent, setSelectedComponent] = useState("home");
+  const [openKeys, setOpenKeys] = useState(["1"]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const navigate = useNavigate();
 
-const Home = ({ setSelectedComponent }) => {
-  const handleCardClick = (key) => {
-    setSelectedComponent(key);
-  };
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+
+  useEffect(() => {
+    const handleLogout = async () => {
+      const token = localStorage.getItem("jwtToken");
+      if (token == null) {
+        navigate("/");
+      }
+    };
+    handleLogout();
+  }, [navigate]);
+
+  const menuConfig = [
+    {
+      key: "1",
+      icon: <HomeOutlined />,
+      label: "Gestion D'Etablissement",
+      children: [
+        { key: "11", icon: <HomeOutlined />, label: "Etablissement" },
+        { key: "12", icon: <PieChartOutlined />, label: "Dashboard" },
+        { key: "13", icon: <NotificationOutlined />, label: "Notification" },
+        { key: "14", icon: <CreditCardOutlined />, label: "Transactions" },
+        { key: "18", icon: <AppstoreOutlined />, label: "Abonnements" },
+        { key: "150", icon: <FundOutlined />, label: "Services" },
+        {
+          key: "15",
+          icon: <BookOutlined />,
+          label: "Gestion de cours",
+          children: [
+            { key: "151", icon: <ClockCircleOutlined />, label: "Séance" },
+            { key: "152", icon: <LayoutOutlined />, label: "Salle" },
+            { key: "153", icon: <BookOutlined />, label: "Cours" },
+          ],
+        },
+      ],
+    },
+    {
+      key: "2",
+      icon: <AppstoreOutlined />,
+      label: "Gestion des clients",
+      children: [
+        { key: "21", icon: <UserOutlined />, label: "Clients" },
+        { key: "22", icon: <ContactsOutlined />, label: "Contrats" },
+        { key: "230", icon: <BookOutlined />, label: "Réservations" },
+      ],
+    },
+    {
+      key: "3",
+      icon: <UserOutlined />,
+      label: "Gestion du Personnel",
+      children: [
+        { key: "31", icon: <UserOutlined />, label: "Staff" },
+        { key: "32", icon: <FieldTimeOutlined />, label: "Période" },
+        { key: "33", icon: <FundOutlined />, label: "Paiement" },
+        { key: "35", icon: <ReconciliationOutlined />, label: "Contrat Staff" },
+      ],
+    },
+    { key: "41", icon: <CopyOutlined />, label: "Journal des événements" },
+    { key: "39", icon: <UserOutlined />, label: "Fournisseur" },
+  ];
 
   const groupedMenuItems = [
     {
       title: "Gestion d'Établissement",
-      items: menuItems.slice(0, 5),
+      items: menuConfig[0].children.slice(0, 6),
     },
     {
       title: "Gestion des Cours",
-      items: menuItems.slice(5, 9),
+      items: menuConfig[0].children[6].children,
     },
     {
       title: "Gestion des Clients",
-      items: menuItems.slice(9, 12),
+      items: menuConfig[1].children,
     },
     {
       title: "Gestion du Personnel",
-      items: menuItems.slice(12, 15),
+      items: menuConfig[2].children,
     },
     {
       title: "Système",
-      items: menuItems.slice(15),
+      items: [menuConfig[3], menuConfig[4]],
     },
   ];
 
-  return (
-    <div style={{ padding: "24px" }}>
-      <Collapse accordion bordered={false} defaultActiveKey={["0"]}>
-        {groupedMenuItems.map((group, groupIndex) => (
-          <Panel header={group.title} key={groupIndex}>
-            <Row gutter={[16, 16]}>
-              {group.items.map((item) => (
-                <Col xs={24} sm={12} md={8} lg={8} key={item.key}>
-                  <Card
-                    hoverable
-                    style={{ textAlign: "center" }}
-                    onClick={() => handleCardClick(item.key)}
-                  >
-                    {React.cloneElement(item.icon, {
-                      style: { fontSize: "25px", marginBottom: "8px" },
-                    })}
-                    <Title level={4}>{item.title}</Title>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Panel>
-        ))}
-      </Collapse>
-    </div>
-  );
-};
-
-const MenuPrime = () => {
-  const [selectedComponent, setSelectedComponent] = useState("100");
-  const [stateOpenKeys, setStateOpenKeys] = useState(["1", "12"]);
-  const navigate = useNavigate();
-
-  const onOpenChange = (openKeys) => {
-    setStateOpenKeys(openKeys);
+  const onOpenChange = (keys) => {
+    const latestOpenKey = keys.find((key) => openKeys.indexOf(key) === -1);
+    if (
+      latestOpenKey &&
+      menuConfig.map((item) => item.key).indexOf(latestOpenKey) === -1
+    ) {
+      setOpenKeys(keys);
+    } else {
+      setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
+    }
   };
 
-  const onClick = (e) => {
+  const handleMenuClick = (e) => {
     setSelectedComponent(e.key);
   };
 
   const renderComponent = () => {
     switch (selectedComponent) {
-      case "100":
-        return <Home setSelectedComponent={setSelectedComponent} />;
+      case "home":
+        return renderHomeScreen();
       case "11":
         return <Etablisiment />;
       case "12":
@@ -159,241 +195,163 @@ const MenuPrime = () => {
         return <Client />;
       case "22":
         return <Contract />;
-      case "23":
-        return <Reservation />;
+      case "230":
+        return <ReservationService />;
       case "31":
         return <Staff />;
       case "32":
         return <Peroid />;
       case "33":
         return <Payment />;
-      case "34":
-        return <Coach />;
       case "35":
         return <ContractStaff />;
       case "41":
         return <Record />;
-      case "36":
-        return <ReservationCoachs />;
-      case "37":
-        return <CoursC />;
-      case "38":
-        return <SeanceCoach />;
       case "39":
         return <Fournisseur />;
       case "150":
         return <Servies />;
-      case "230":
-        return <ReservationService />;
       default:
-        return <Home setSelectedComponent={setSelectedComponent} />;
+        return <Dashboard />;
     }
   };
 
-  const menuConfig =
-    JSON.parse(localStorage.getItem(`data`))[0].fonction == "Administration" ||
-    JSON.parse(localStorage.getItem("data"))[0].fonction == "secretaire"
-      ? [
-          {
-            key: "100",
-            label: "Home",
-            icon: <AppstoreOutlined />,
-          },
-          {
-            key: "1",
-            label: "Gestion D'Etablissement",
-            icon: <HomeOutlined />,
-            children: [
-              {
-                key: "11",
-                label: "Etablissement",
-                icon: <HomeOutlined />,
-              },
-              {
-                key: "12",
-                label: "Dashboard",
-                icon: <PieChartOutlined />,
-              },
-              {
-                key: "13",
-                label: "Notification",
-                icon: <NotificationOutlined />,
-              },
-              {
-                key: "14",
-                label: "Transactions",
-                icon: <CreditCardOutlined />,
-              },
-              {
-                key: "18",
-                label: "Abonnements",
-                icon: <AppstoreOutlined />,
-              },
-              {
-                key: "150",
-                label: "Servies",
-                icon: <FundOutlined />,
-              },
-             
-              {
-                key: "15",
-                label: "Gestion de cours",
-                icon: <BookOutlined />,
-                children: [
-                  {
-                    key: "151",
-                    label: "Séance",
-                    icon: <ClockCircleOutlined />,
-                  },
-                  {
-                    key: "152",
-                    label: "Salle",
-                    icon: <LayoutOutlined />,
-                  },
-                  {
-                    key: "153",
-                    label: "Cours",
-                    icon: <BookOutlined />,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            key: "2",
-            label: "Gestion des clients",
-            icon: <AppstoreOutlined />,
-            children: [
-              {
-                key: "21",
-                label: "Clients",
-                icon: <UserOutlined />,
-              },
-              {
-                key: "22",
-                label: "Contrats",
-                icon: <ContactsOutlined />,
-              },
-              // {
-              //   key: "23",
-              //   label: "Réservations",
-              //   icon: <BookOutlined />,
-              // },
-              {
-                key: "230",
-                label: "Réservations",
-                icon: <BookOutlined />,
-              },
-            ],
-          },
-          {
-            key: "3",
-            label: "Gestion du Personnel",
-            icon: <UserOutlined />,
-            children: [
-              {
-                key: "31",
-                label: "Staff",
-                icon: <UserOutlined />,
-              },
-              {
-                key: "32",
-                label: "Période",
-                icon: <FieldTimeOutlined />,
-              },
-              {
-                key: "33",
-                label: "Paiement",
-                icon: <FundOutlined />,
-              },
-              {
-                key: "35",
-                label: "Contrat Staff",
-                icon: <ReconciliationOutlined />,
-              },
-            ],
-          },
-          {
-            key: "41",
-            label: "Journal des événement",
-            icon: <CopyOutlined />,
-          },
-          {
-            key: "39",
-            label: "Fournisseur",
-            icon: <UserOutlined />,
-          },
+  const renderHomeScreen = () => (
+    <div style={{ padding: "24px" }}>
+      <Collapse accordion bordered={false} defaultActiveKey={["0"]}>
+        {groupedMenuItems.map((group, groupIndex) => (
+          <Panel header={group.title} key={groupIndex}>
+            <Row gutter={[16, 16]}>
+              {group.items.map((item) => (
+                <Col xs={24} sm={12} md={8} lg={8} key={item.key}>
+                  <Card
+                    hoverable
+                    style={{ textAlign: "center" }}
+                    onClick={() => setSelectedComponent(item.key)}
+                  >
+                    {React.cloneElement(item.icon, {
+                      style: { fontSize: "25px", marginBottom: "8px" },
+                    })}
+                    <Title level={4}>{item.label}</Title>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Panel>
+        ))}
+      </Collapse>
+    </div>
+  );
 
-          {
-            key: "40",
-            label: "Deconnexion",
-            icon: <LogoutOutlined />,
-            onClick: () => {
-              localStorage.removeItem("jwtToken");
-              navigate("/");
-            },
-          },
-        ]
-      : [
-          {
-            key: "100",
-            label: "Home",
-            icon: <AppstoreOutlined />,
-          },
-          {
-            key: "40",
-            label: "Coachs",
-            icon: <AppstoreOutlined />,
-            children: [
-              {
-                key: "36",
-                label: "Pointage",
-                icon: <UserOutlined />,
-              },
-              {
-                key: "37",
-                label: "Cours",
-                icon: <ContactsOutlined />,
-              },
-              {
-                key: "38",
-                label: "Séances",
-                icon: <BookOutlined />,
-              },
-            ],
-          },
-          {
-            key: "39",
-            label: "Fournisseur",
-            icon: <UserOutlined />,
-          },
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
+    navigate("/");
+  };
 
-          {
-            key: "40",
-            label: "Deconnexion",
-            icon: <LogoutOutlined />,
-            onClick: () => {
-              localStorage.removeItem("jwtToken");
-              navigate("/");
-            },
-          },
-        ];
+  const toggleDarkMode = (checked) => {
+    setIsDarkMode(checked);
+    document.body.classList.toggle("dark-mode", checked);
+  };
 
   return (
-    <div className="w-full flex justify-start space-x-2">
-      <Menu
-        onClick={onClick}
-        mode="inline"
-        selectedKeys={[selectedComponent]}
-        openKeys={stateOpenKeys}
-        onOpenChange={onOpenChange}
+    <Layout
+      style={{ minHeight: "100vh" }}
+      className={isDarkMode ? "dark-mode" : ""}
+    >
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        // width={}
         style={{
-          width: 256,
+          overflow: "auto",
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          backgroundColor: isDarkMode ? "#001529" : "#fff",
         }}
-        items={menuConfig}
-      />
-      <div className="w-full">{renderComponent()}</div>
-    </div>
+      >
+        <Menu
+          theme={isDarkMode ? "dark" : "light"}
+          mode="inline"
+          openKeys={openKeys}
+          onOpenChange={onOpenChange}
+          onClick={handleMenuClick}
+          selectedKeys={[selectedComponent]}
+          style={{ marginTop: 10 }}
+          items={[
+            { key: "home", icon: <HomeOutlined />, label: "Home" },
+            ...menuConfig,
+          ]}
+        />
+      </Sider>
+      <Layout
+        style={{ marginLeft: collapsed ? 80 : 200, transition: "all 0.2s" }}
+      >
+        <Header
+          style={{
+            padding: 0,
+            background: isDarkMode ? "#001529" : colorBgContainer,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "fixed",
+            zIndex: 1000,
+            width: `calc(100% - ${collapsed ? 80 : 200}px)`,
+            transition: "all 0.2s",
+          }}
+        >
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              fontSize: "16px",
+              width: 64,
+              height: 64,
+            }}
+          />
+          {/* <div
+            style={{ color: isDarkMode ? "white" : "black" }}
+            className="text-lg"
+          >
+            {toCapitalize(selectedMenu.split("_")[0]) +
+              " " +
+              selectedMenu.split("_")[1]}
+          </div> */}
+
+          <Space>
+            <Switch
+              checkedChildren="🌙"
+              unCheckedChildren="☀️"
+              checked={isDarkMode}
+              onChange={toggleDarkMode}
+            />
+            <Tooltip title="Déconnexion">
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                style={{ marginRight: 16 }}
+              />
+            </Tooltip>
+          </Space>
+        </Header>
+        <Content
+          style={{
+            margin: "24px 16px",
+            padding: 24,
+            minHeight: 280,
+            background: isDarkMode ? "#141414" : colorBgContainer,
+            borderRadius: borderRadiusLG,
+          }}
+        >
+          {renderComponent()}
+        </Content>
+      </Layout>
+    </Layout>
   );
 };
 

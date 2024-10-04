@@ -11,6 +11,7 @@ import {
   Button,
   Drawer,
   Space,
+  ColorPicker,
 } from "antd";
 import {
   SearchOutlined,
@@ -18,9 +19,10 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
-import moment from "moment";
-import { handlePrintContractStaff } from "../../../utils/printable/contraStaff";
+// import moment from "moment";
+// import { handlePrintContractStaff } from "../../../utils/printable/contraStaff";
 import { addNewTrace, getCurrentDate } from "../../../utils/helper";
 
 const TableCours = () => {
@@ -43,6 +45,7 @@ const TableCours = () => {
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [changedFields, setChangedFields] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
+  const [openColorPicker, setOpenColorPicker] = useState(false);
 
   // State for room related data
   const [ClientData, setClientData] = useState({
@@ -434,43 +437,43 @@ const TableCours = () => {
   return (
     <div className="w-full p-2">
       <Modal
-      title={`Détails de ${selectedCourse?.nom_cour}`}
-      visible={isViewModalVisible}
-      onCancel={() => {
-        setIsViewModalVisible(false);
-        setSelectedCourse(null);
-      }}
-      footer={null}
-    >
-      <Table
-        columns={[
-          {
-            title: 'Nom du Cours',
-            dataIndex: 'nom_cour',
-            key: 'nom_cour',
-          },
-          {
-            title: 'Description',
-            dataIndex: 'description',
-            key: 'description',
-          },
-          {
-            title: 'Règlement',
-            dataIndex: 'reglement',
-            key: 'reglement',
-          },
-          {
-            title: 'Genre',
-            dataIndex: 'genre',
-            key: 'genre',
-          },
-          // Add other details columns as needed
-        ]}
-        dataSource={selectedCourse ? [selectedCourse] : []}
-        pagination={false}
-        rowKey="id_cour"
-      />
-    </Modal>
+        title={`Détails de ${selectedCourse?.nom_cour}`}
+        visible={isViewModalVisible}
+        onCancel={() => {
+          setIsViewModalVisible(false);
+          setSelectedCourse(null);
+        }}
+        footer={null}
+      >
+        <Table
+          columns={[
+            {
+              title: "Nom du Cours",
+              dataIndex: "nom_cour",
+              key: "nom_cour",
+            },
+            {
+              title: "Description",
+              dataIndex: "description",
+              key: "description",
+            },
+            {
+              title: "Règlement",
+              dataIndex: "reglement",
+              key: "reglement",
+            },
+            {
+              title: "Genre",
+              dataIndex: "genre",
+              key: "genre",
+            },
+            // Add other details columns as needed
+          ]}
+          dataSource={selectedCourse ? [selectedCourse] : []}
+          pagination={false}
+          rowKey="id_cour"
+        />
+      </Modal>
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center space-x-7">
           <div className="w-52">
@@ -486,7 +489,7 @@ const TableCours = () => {
               "Administration" ||
               JSON.parse(localStorage.getItem(`data`))[0].fonction ==
                 "secretaire") &&
-              selectedRowKeys.length === 1 ? (
+            selectedRowKeys.length === 1 ? (
               <EditOutlined
                 className="cursor-pointer"
                 onClick={handleEditClick}
@@ -498,7 +501,7 @@ const TableCours = () => {
               "Administration" ||
               JSON.parse(localStorage.getItem(`data`))[0].fonction ==
                 "secretaire") &&
-              selectedRowKeys.length >= 1 ? (
+            selectedRowKeys.length >= 1 ? (
               <Popconfirm
                 title="Supprimer le cours"
                 description="Êtes-vous sûr de supprimer ce cours"
@@ -520,15 +523,15 @@ const TableCours = () => {
             {(JSON.parse(localStorage.getItem(`data`))[0].fonction ==
               "Administration" ||
               JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-                "secretaire")&& (
-                <Button
-                  type="default"
-                  onClick={showDrawerR}
-                  icon={<UserAddOutlined />}
-                >
-                  Ajoute Cours
-                </Button>
-              )}
+                "secretaire") && (
+              <Button
+                type="default"
+                onClick={showDrawerR}
+                icon={<UserAddOutlined />}
+              >
+                Ajoute Cours
+              </Button>
+            )}
           </div>
           <Drawer
             title="Saisir un nouveau Cours"
@@ -616,6 +619,14 @@ const TableCours = () => {
                         ]}
                       />
                     </div>
+                  </div>
+                  <div className="mt-5">
+                    <div>Sélectionner le color de cour</div>
+                    <ColorPicker
+                      className="mt-3"
+                      defaultValue="#1677ff"
+                      trigger="hover"
+                    />
                   </div>
                 </div>
                 <Space className="mt-10">

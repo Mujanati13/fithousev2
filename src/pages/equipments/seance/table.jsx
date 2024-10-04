@@ -130,6 +130,104 @@ const TableSeance = () => {
   const [availableSalles, setAvailableSalles] = useState([]);
   const [availableCoaches, setAvailableCoaches] = useState([]);
   const [timeError, setTimeError] = useState("");
+  const [clients, setClients] = useState([]);
+  const [currentClient, setcurrentClient] = useState("");
+  const [isReservationDrawerVisible, setIsReservationDrawerVisible] =
+    useState(false);
+  const [selectedSeance, setSelectedSeance] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isAppointmentModalVisible, setIsAppointmentModalVisible] =
+    useState(false);
+  const handleAppointmentClick = (appointmentData) => {
+    setSelectedAppointment(appointmentData);
+    setIsAppointmentModalVisible(true);
+  };
+  const handleAppointmentModalClose = () => {
+    setIsAppointmentModalVisible(false);
+    setSelectedAppointment(null);
+  };
+  const handleUpdate = () => {
+    // Implement update logic here
+    console.log("Update appointment:", selectedAppointment);
+    handleEditClickCalander(selectedAppointment.id);
+    handleAppointmentModalClose();
+  };
+  const handleReserve = () => {
+    // Implement reserve logic here
+    console.log("Reserve appointment:", selectedAppointment);
+    handleReservationClick(selectedAppointment.id);
+    handleAppointmentModalClose();
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          "https://fithouse.pythonanywhere.com/api/clients/",
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+            },
+          }
+        );
+        const jsonData = await response.json();
+        setClients(jsonData.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleReservationClick = (seanceId) => {
+    const seance = data2.find((item) => item.id === seanceId);
+    setSelectedSeance(seance);
+    setIsReservationDrawerVisible(true);
+  };
+  const handleReservationSubmit = async () => {
+    if (!selectedClient) {
+      message.error("Veuillez sélectionner un client");
+      return;
+    }
+
+    const authToken = localStorage.getItem("jwtToken");
+
+    try {
+      const response = await fetch(
+        "https://fithouse.pythonanywhere.com/api/reservation/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            id_seance: selectedSeance.id,
+            id_client: selectedClient,
+            date_reservation: getCurrentDate(),
+            date_presence: selectedSeance.startDate, // Include the date_presence field
+            statut: "confirmé",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        message.success("Réservation effectuée avec succès");
+        setIsReservationDrawerVisible(false);
+        setSelectedClient(null);
+        // Refresh the calendar data
+        fetchData();
+      } else {
+        message.error("Erreur lors de la réservation");
+      }
+    } catch (error) {
+      console.error("Error making reservation:", error);
+      // message.error("Une erreur est survenue lors de la réservation");
+    }
+  };
 
   // State for room related data
   const [ClientData, setClientData] = useState({
@@ -287,10 +385,6 @@ const TableSeance = () => {
         return;
       }
       const id_staff = JSON.parse(localStorage.getItem("data"));
-      // ClientData.id_coach = id_staff[0].id_employe
-      console.log("====================================");
-      console.log(ClientData.id_coach);
-      console.log("====================================");
       const response = await fetch(
         "https://fithouse.pythonanywhere.com/api/seance/",
         {
@@ -450,7 +544,6 @@ const TableSeance = () => {
   useEffect(() => {
     const fetchData = async () => {
       const authToken = localStorage.getItem("jwtToken");
-
       try {
         const response = await fetch(
           "https://fithouse.pythonanywhere.com/api/seance/",
@@ -460,23 +553,21 @@ const TableSeance = () => {
             },
           }
         );
-
         const data = await response.json();
         const formattedData = data.data.map((item) => ({
           id: item.id_seance,
           title: item.cour,
           startDate: convertToDateTime(item).startDate,
           endDate: convertToDateTime(item).endDate,
+          color: item.color || "#fcba03", 
         }));
-
         setData2(formattedData);
-        console.log(formattedData);
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);
       }
     };
     fetchData();
-  }, [add, update]);
+  }, [update, add]);
 
   // Function to capitalize the first letter of a string
   const capitalizeFirstLetter = (str) => {
@@ -905,8 +996,97 @@ const TableSeance = () => {
     }
   };
 
+  const handleReservation = async (seanceId) => {
+    const authToken = localStorage.getItem("jwtToken");
+    const userData = JSON.parse(localStorage.getItem("data"));
+    const userId = userData[0].id_employe;
+
+    try {
+      const response = await fetch(
+        "https://fithouse.pythonanywhere.com/api/reservation/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            id_seance: seanceId,
+            id_client: userId,
+            date_reservation: getCurrentDate(),
+            statut: "confirmé",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        message.success("Réservation effectuée avec succès");
+        // Refresh the calendar data
+        fetchData();
+      } else {
+        message.error("Erreur lors de la réservation");
+      }
+    } catch (error) {
+      console.error("Error making reservation:", error);
+      // message.error("Une erreur est survenue lors de la réservation");
+    }
+  };
+
+  const AppointmentContent = ({ children, style, data, ...restProps }) => (
+    <Appointments.Appointment
+      {...restProps}
+      style={{
+        ...style,
+        backgroundColor: data.color,
+        borderRadius: "8px",
+      }}
+      onClick={() => handleAppointmentClick(data)}
+    >
+      <div style={{ padding: "8px" }}>{children}</div>
+    </Appointments.Appointment>
+  );
+
   return (
     <div className="w-full p-2">
+      <Drawer
+        title="Réserver une séance"
+        placement="right"
+        closable={false}
+        onClose={() => setIsReservationDrawerVisible(false)}
+        visible={isReservationDrawerVisible}
+        width={400}
+      >
+        <Form layout="vertical">
+          <Form.Item
+            name="client"
+            label="Sélectionner un client"
+            rules={[
+              { required: true, message: "Veuillez sélectionner un client" },
+            ]}
+          >
+            <Select
+              showSearch
+              placeholder="Sélectionner un client"
+              optionFilterProp="children"
+              onChange={(value) => setSelectedClient(value)}
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              {clients.map((client) => (
+                <Select.Option key={client.id_client} value={client.id_client}>
+                  {`${client.nom_client} ${client.prenom_client}`}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={handleReservationSubmit}>
+              Confirmer la réservation
+            </Button>
+          </Form.Item>
+        </Form>
+      </Drawer>
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center space-x-7">
           {display ? (
@@ -970,22 +1150,13 @@ const TableSeance = () => {
         {/* add new client  */}
         <div>
           <div className="flex items-center space-x-3">
-            {(JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-              "Administration" ||
-              JSON.parse(localStorage.getItem(`data`))[0].fonction ==
-                "secretaire") &&
-            display ? (
-              <Button
-                type="default"
-                onClick={showDrawerR}
-                icon={<UserAddOutlined />}
-              >
-                Ajout seance
-              </Button>
-            ) : (
-              " "
-            )}
-
+            <Button
+              type="default"
+              onClick={showDrawerR}
+              icon={<UserAddOutlined />}
+            >
+              Ajout seance
+            </Button>
             <Segmented
               onChange={(v) => {
                 setDisplay(!display);
@@ -1206,50 +1377,36 @@ const TableSeance = () => {
       ) : (
         <div className="mt-5">
           <Paper>
-            <Scheduler data={data2} height={405} locale="fr-FR">
+            <Scheduler data={data2} height={600}>
               <ViewState currentDate={currentDate} />
-              <EditingState
-                onCommitChanges={commitChanges}
-                addedAppointment={addedAppointment}
-                onAddedAppointmentChange={setAddedAppointment}
-                appointmentChanges={appointmentChanges}
-                onAppointmentChangesChange={setAppointmentChanges}
-                editingAppointment={editingAppointment}
-                onEditingAppointmentChange={setEditingAppointment}
-              />
-              <WeekView
-                startDayHour={9}
-                endDayHour={17}
-                timeTableCellComponent={(props) => (
-                  <WeekView.TimeTableCell
-                    {...props}
-                    onClick={() => handleEmptyCellClick(props.startDate)}
-                    style={{ cursor: "pointer" }}
-                  />
-                )}
-              />
-              <AllDayPanel messages={{ allDay: "Toute la journée" }} />
-              <EditRecurrenceMenu />
-              <ConfirmationDialog />
-              <Appointments
-                appointmentComponent={(props) => (
-                  <Appointments.Appointment
-                    {...props}
-                    onClick={() => openCustomForm(props.data)}
-                  />
-                )}
-              />
-              <AppointmentTooltip
-                showOpenButton
-                showDeleteButton
-                onOpenButtonClick={(appointmentData) =>
-                  openCustomForm(appointmentData)
-                }
-              />
+              <EditingState />
+              <WeekView startDayHour={9} endDayHour={19} />
+              <AllDayPanel />
+              <Appointments appointmentComponent={AppointmentContent} />
+              <AppointmentTooltip showOpenButton showDeleteButton />
             </Scheduler>
           </Paper>
         </div>
       )}
+
+      <Modal
+        title={"Actions"}
+        visible={isAppointmentModalVisible}
+        onCancel={handleAppointmentModalClose}
+        footer={null}
+      >
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Button icon={<EditOutlined />} onClick={handleUpdate} block>
+            Mettre à jour la séance
+          </Button>
+          <Button disabled={true} icon={<DeleteOutlined />} onClick={handleDelete} danger block>
+            Supprimer la séance
+          </Button>
+          <Button onClick={handleReserve} type="primary" block>
+            Faire une réservation
+          </Button>
+        </Space>
+      </Modal>
 
       <Modal
         visible={isModalVisible1}

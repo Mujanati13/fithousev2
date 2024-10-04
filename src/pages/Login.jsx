@@ -88,7 +88,6 @@ export default function Login() {
           width={100}
           className=""
           src={logo}
-          alt="logo sportx"
         />
       </div>
       <div className="w-80 h-60 m-auto mt-1 flex flex-col justify-center items-center space-y-5">

@@ -59,12 +59,8 @@ const TableReservations = () => {
       end: new Date(
         reservation.date_presence.split("T")[0] + "T" + reservation.heure_fin
       ),
-      heure_debut: new Date(
-        reservation.date_presence + "T" + reservation.heure_debut
-      ),
-      heure_fin: new Date(
-        reservation.date_presence + "T" + reservation.heure_fin
-      ),
+      datestart: reservation.heure_debut,
+      dateend: reservation.heure_fin,
       allDay: false,
       resource: reservation.status ? "Active" : "Inactive",
       status: reservation.status,
