@@ -54,7 +54,7 @@ const TableSeance = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [changedFields, setChangedFields] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
-
+ 
   const commitChanges = ({ added, changed, deleted }) => {
     setData2((prevData) => {
       let updatedData = prevData;
@@ -137,6 +137,34 @@ const TableSeance = () => {
   const [selectedSeance, setSelectedSeance] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          "https://fithouse.pythonanywhere.com/api/cours/",
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        const jsonData = await response.json();
+        setCourDetils(jsonData.data);
+        const option = jsonData.data.map((course) => ({
+          label: course.nom_cour,
+          value: course.id_cour,
+          color: course.color, // Store the color information
+        }));
+        setCours(option);
+      } catch (error) {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   const [isAppointmentModalVisible, setIsAppointmentModalVisible] =
     useState(false);
   const handleAppointmentClick = (appointmentData) => {
@@ -554,13 +582,19 @@ const TableSeance = () => {
           }
         );
         const data = await response.json();
-        const formattedData = data.data.map((item) => ({
-          id: item.id_seance,
-          title: item.cour,
-          startDate: convertToDateTime(item).startDate,
-          endDate: convertToDateTime(item).endDate,
-          color: item.color || "#fcba03", 
-        }));
+        console.log('====================================');
+        console.log(CourDetils);
+        console.log('====================================');
+        const formattedData = data.data.map((item) => {
+          const courseDetails = CourDetils.find(course => course.id_cour === item.id_cour);
+          return {
+            id: item.id_seance,
+            title: item.cour,
+            startDate: convertToDateTime(item).startDate,
+            endDate: convertToDateTime(item).endDate,
+            color: courseDetails ? courseDetails.code_couleur : "#fcba03", // Use the color from CourDetils, or fallback to default
+          };
+        });
         setData2(formattedData);
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);

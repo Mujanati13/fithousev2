@@ -54,6 +54,7 @@ const TableCours = () => {
     reglement: "",
     genre: "",
     image: "cours/avatar.jpg",
+    code_couleur: "",
   });
 
   useEffect(() => {
@@ -622,10 +623,16 @@ const TableCours = () => {
                   </div>
                   <div className="mt-5">
                     <div>Sélectionner le color de cour</div>
-                    <ColorPicker
+                    <input
+                      type="color"
                       className="mt-3"
-                      defaultValue="#1677ff"
-                      trigger="hover"
+                      onChange={(e) => {
+                        setClientData((prevData) => ({
+                          ...prevData,
+                          code_couleur: e.target.value,
+                        }));
+                      }}
+                      value={ClientData.code_couleur}
                     />
                   </div>
                 </div>

@@ -8,7 +8,6 @@ COPY . /app
 RUN npm install
 
 # Increase Node.js memory limit during build
-RUN NODE_OPTIONS="--max-old-space-size=1024" npm run build
 
 # Stage 2: Serve the app using Nginx
 FROM ubuntu
