@@ -1,24 +1,26 @@
-# Stage 1: Build the React app
-FROM node:18-alpine3.17 as build
+# Use an official Node.js runtime as a parent image
+FROM node:22.1.0
 
-WORKDIR /app
-COPY . /app
+# Set the Node.js memory limit
+ENV NODE_OPTIONS=--max-old-space-size=4096
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Increase Node.js memory limit during build
+# Copy the rest of your application code
+COPY . .
 
-# Stage 2: Serve the app using Nginx
-FROM ubuntu
+# Build your application (if applicable)
+RUN npm run build
 
-RUN apt-get update && apt-get install nginx -y
+# Expose the port your app runs on
+EXPOSE 3000
 
-# Copy the built React app from the first stage
-COPY --from=build /app/dist /var/www/html/
-
-# Expose port 80
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start your application
+CMD ["npm", "start"]
