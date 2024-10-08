@@ -67,6 +67,7 @@ const MenuPrime = () => {
   const [selectedComponent, setSelectedComponent] = useState("home");
   const [openKeys, setOpenKeys] = useState(["1"]);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -78,12 +79,16 @@ const MenuPrime = () => {
       const token = localStorage.getItem("jwtToken");
       if (token == null) {
         navigate("/");
+      } else {
+        // Assuming the user role is stored in localStorage
+        const userData = JSON.parse(localStorage.getItem("data"));
+        setUserRole(userData[0].fonction);
       }
     };
     handleLogout();
   }, [navigate]);
 
-  const menuConfig = [
+  const adminMenuConfig = [
     {
       key: "1",
       icon: <HomeOutlined />,
@@ -132,28 +137,52 @@ const MenuPrime = () => {
     { key: "39", icon: <UserOutlined />, label: "Fournisseur" },
   ];
 
-  const groupedMenuItems = [
+  const coachMenuConfig = [
     {
-      title: "Gestion d'Établissement",
-      items: menuConfig[0].children.slice(0, 6),
-    },
-    {
-      title: "Gestion des Cours",
-      items: menuConfig[0].children[6].children,
-    },
-    {
-      title: "Gestion des Clients",
-      items: menuConfig[1].children,
-    },
-    {
-      title: "Gestion du Personnel",
-      items: menuConfig[2].children,
-    },
-    {
-      title: "Système",
-      items: [menuConfig[3], menuConfig[4]],
+      key: "4",
+      icon: <AppstoreOutlined />,
+      label: "Coachs",
+      children: [
+        { key: "36", icon: <UserOutlined />, label: "Pointage" },
+        { key: "37", icon: <ContactsOutlined />, label: "Cours" },
+        { key: "38", icon: <BookOutlined />, label: "Séances" },
+      ],
     },
   ];
+
+  const menuConfig = userRole === "Administration" || userRole === "secretaire" 
+    ? adminMenuConfig 
+    : coachMenuConfig;
+
+  const groupedMenuItems = userRole === "Administration" || userRole === "secretaire" 
+    ? [
+        {
+          title: "Gestion d'Établissement",
+          items: menuConfig[0].children.slice(0, 6),
+        },
+        {
+          title: "Gestion des Cours",
+          items: menuConfig[0].children[6].children,
+        },
+        {
+          title: "Gestion des Clients",
+          items: menuConfig[1].children,
+        },
+        {
+          title: "Gestion du Personnel",
+          items: menuConfig[2].children,
+        },
+        {
+          title: "Système",
+          items: [menuConfig[3], menuConfig[4]],
+        },
+      ]
+    : [
+        {
+          title: "Coachs",
+          items: menuConfig[0].children,
+        },
+      ];
 
   const onOpenChange = (keys) => {
     const latestOpenKey = keys.find((key) => openKeys.indexOf(key) === -1);
@@ -211,6 +240,12 @@ const MenuPrime = () => {
         return <Fournisseur />;
       case "150":
         return <Servies />;
+      case "36":
+        return <ReservationCoachs />;
+      case "37":
+        return <CoursC />;
+      case "38":
+        return <SeanceCoach />;
       default:
         return <Dashboard />;
     }
@@ -262,7 +297,6 @@ const MenuPrime = () => {
         trigger={null}
         collapsible
         collapsed={collapsed}
-        // width={}
         style={{
           overflow: "auto",
           height: "100vh",
@@ -313,15 +347,6 @@ const MenuPrime = () => {
               height: 64,
             }}
           />
-          {/* <div
-            style={{ color: isDarkMode ? "white" : "black" }}
-            className="text-lg"
-          >
-            {toCapitalize(selectedMenu.split("_")[0]) +
-              " " +
-              selectedMenu.split("_")[1]}
-          </div> */}
-
           <Space>
             <Switch
               checkedChildren="🌙"

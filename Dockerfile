@@ -1,8 +1,8 @@
 # Use an official Node.js runtime as a parent image
-FROM node:22.1.0
+FROM node:19.5.0-alpine
 
 # Set the Node.js memory limit
-ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV NODE_OPTIONS=--max-old-space-size=1906
 
 # Set the working directory
 WORKDIR /usr/src/app

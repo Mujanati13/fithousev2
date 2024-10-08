@@ -46,22 +46,6 @@ const fetchReservations = async () => {
   }
 };
 
-const transformReservations = (reservations) => {
-  return reservations.map((reservation) => ({
-    id: reservation.id_reservation,
-    id_seance: reservation.id_seance,
-    title: `${reservation.cour} - ${reservation.cour}`,
-    start: new Date(reservation.date_presence + "T" + reservation.heur_debut),
-    end: new Date(reservation.date_presence + "T" + reservation.heure_fin),
-    datestart: reservation.heur_debut,
-    dateend: reservation.heure_fin,
-    coach: reservation.coach,
-    allDay: false,
-    resource: reservation.salle,
-    day: reservation.day_name
-  }));
-};
-
 export const TableReservationCoachs = () => {
   const [events, setEvents] = useState([]);
   const [open1, setOpen1] = useState(false);
@@ -209,6 +193,29 @@ export const TableReservationCoachs = () => {
     }
   };
 
+  const transformReservations = (reservations) => {
+    return reservations.map((reservation) => {
+      // Extract date and time components
+      const dateParts = reservation.date_presence.split('T')[0];
+      const startDateTime = new Date(`${dateParts}T${reservation.heur_debut}`);
+      const endDateTime = new Date(`${dateParts}T${reservation.heure_fin}`);
+  
+      return {
+        id: reservation.id_reservation,
+        id_seance: reservation.id_seance,
+        title: `${reservation.cour} - ${reservation.client}`,
+        start: startDateTime,
+        end: endDateTime,
+        datestart: reservation.heur_debut,
+        dateend: reservation.heure_fin,
+        coach: reservation.coach,
+        allDay: false,
+        resource: reservation.salle,
+        day: reservation.day_name
+      };
+    });
+  };
+
   useEffect(() => {
     fetchClients();
     fetchCours();
@@ -297,9 +304,6 @@ export const TableReservationCoachs = () => {
   }, [add]);
 
   const fetchClientParSeance = async (e) => {
-    console.log("====================================");
-    console.log(e);
-    console.log("====================================");
     const authToken = localStorage.getItem("jwtToken");
     try {
       const [clientResponse, presenceResponse] = await Promise.all([

@@ -374,6 +374,7 @@ const TableClient = () => {
   };
 
   const authToken = localStorage.getItem("jwtToken"); // Replace with your actual auth token
+  "https://fithouse.pythonanywhere.com/api/clients/",
 
   useEffect(() => {
     const fetchData = async () => {

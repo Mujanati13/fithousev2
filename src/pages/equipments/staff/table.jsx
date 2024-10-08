@@ -82,7 +82,10 @@ const TableStaff = () => {
     fonction: "",
     image: imagePath,
   });
-
+  const [sortedInfo, setSortedInfo] = useState({});
+  const handleChange2 = (pagination, filters, sorter) => {
+    setSortedInfo(sorter);
+};
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
@@ -143,6 +146,7 @@ const TableStaff = () => {
       message.error("File upload failed");
     }
   };
+  
   const uploadButton = (
     <div>
       <PlusOutlined />
@@ -334,83 +338,107 @@ const TableStaff = () => {
     });
     setFilteredData(filtered);
   };
-
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          "https://fithouse.pythonanywhere.com/api/staff/",
-          {
-            // headers: {
-            //   "Authorization": `Bearer ${authToken}`, // Include the auth token in the headers
-            // },
-          }
-        );
-        const jsonData = await response.json();
+        setLoading(true);
+        try {
+            const response = await fetch(
+                "  https://fithouse.pythonanywhere.com/api/staff/",
+                {
+                    headers: {
+                        "Authorization": `Bearer ${authToken}`,
+                    },
+                }
+            );
+            const jsonData = await response.json();
 
-        // Ensure each row has a unique key
-        const processedData = jsonData.data.map((item, index) => ({
-          ...item,
-          key: item.id_coach || index, // Assuming each item has a unique id, otherwise use index
-        }));
+            const processedData = jsonData.data.map((item, index) => ({
+                ...item,
+                key: item.id_coach || index,
+                nom_complet: `${item.prenom} ${item.nom}`,
+            }));
 
-        setData(processedData);
-        setFilteredData(processedData);
-        filterData(processedData, searchText, statusFilter);
+            setData(processedData);
+            setFilteredData(processedData);
+            filterData(processedData, searchText, statusFilter);
 
-        const desiredKeys = [
-          "nom_complet",
-          "fonction",
-          "tel",
-          "mail",
-          "date_recrutement",
-          "actions",
-        ];
+            const desiredKeys = [
+                "nom_complet",
+                "fonction",
+                "tel",
+                "mail",
+                "date_recrutement",
+                "actions",
+            ];
 
-        const generatedColumns = desiredKeys.map((key) => ({
-          title: getColumnTitle(key),
-          dataIndex: key,
-          key,
-          render: (text, record) => {
-            if (key === "actions") {
-              return (
-                <EyeOutlined
-                  style={{ fontSize: "16px", color: "#08c" }}
-                  onClick={() => handleViewDetails(record)}
-                />
-              );
-            }
-            if (key === "nom_complet") {
-              return `${record.prenom} ${record.nom}`;
-            }
-            return text;
-          },
-        }));
+            const generatedColumns = desiredKeys.map((key) => {
+                const columnConfig = {
+                    title: getColumnTitle(key),
+                    dataIndex: key,
+                    key,
+                    sorter: getSorter(key),
+                    sortOrder: sortedInfo.columnKey === key && sortedInfo.order,
+                    render: getRender(key),
+                };
 
-        // Helper function to get column titles
-        function getColumnTitle(key) {
-          const titles = {
-            nom_complet: "Nom complet",
-            fonction: "Fonction",
-            tel: "Téléphone",
-            mail: "Mail",
-            date_recrutement: "Date de recrutement",
-            actions: "Actions",
-          };
-          return titles[key] || key.charAt(0).toUpperCase() + key.slice(1);
+                // Add filters for specific columns
+                if (["nom_complet", "fonction"].includes(key)) {
+                    columnConfig.filters = getFilters(processedData, key);
+                    columnConfig.onFilter = (value, record) => record[key].indexOf(value) === 0;
+                }
+
+                return columnConfig;
+            });
+
+            setColumns(generatedColumns);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setLoading(false);
         }
-        setColumns(generatedColumns);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
     };
 
     fetchData();
-  }, [authToken, update, add]);
+}, [authToken, update, add, sortedInfo, searchText, statusFilter]);
 
+function getColumnTitle(key) {
+    const titles = {
+        nom_complet: "Nom complet",
+        fonction: "Fonction",
+        tel: "Téléphone",
+        mail: "Mail",
+        date_recrutement: "Date de recrutement",
+        actions: "Actions",
+    };
+    return titles[key] || key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function getSorter(key) {
+    if (key === "nom_complet") {
+        return (a, b) => a[key].localeCompare(b[key]);
+    }
+    if (key === "date_recrutement") {
+        return (a, b) => new Date(a[key]) - new Date(b[key]);
+    }
+    return null;
+}
+
+function getRender(key) {
+    if (key === "actions") {
+        return (text, record) => (
+            <EyeOutlined
+                style={{ fontSize: "16px", color: "#08c" }}
+                onClick={() => handleViewDetails(record)}
+            />
+        );
+    }
+    return undefined;
+}
+
+function getFilters(data, key) {
+    const uniqueValues = [...new Set(data.map(item => item[key]))];
+    return uniqueValues.map(value => ({ text: value, value }));
+}
   // Function to capitalize the first letter of a string
   const capitalizeFirstLetter = (str) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -1310,6 +1338,7 @@ const TableStaff = () => {
         columns={columns}
         dataSource={filteredData}
         rowSelection={rowSelection}
+        onChange={handleChange2}
       />
       <Modal
         title="Modifier Staff"

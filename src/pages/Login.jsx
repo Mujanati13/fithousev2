@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { UserOutlined, KeyOutlined } from "@ant-design/icons";
 import { Button, Input, message } from "antd";
-import { Endpoint } from "../utils/endPoint";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo/logo.jpg"; // Import the image using ES6 import
 
@@ -46,7 +45,7 @@ export default function Login() {
     try {
       const endpoint =
         userType === "admin" ? "/api/login" : "/api/login";
-      const response = await fetch(Endpoint() + endpoint, {
+      const response = await fetch("https://fithouse.pythonanywhere.com" + endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +86,8 @@ export default function Login() {
           height={100}
           width={100}
           className=""
-          src={logo}
+          src={"../../src/assets/logo/logo.jpg"}
+          alt={"logo"}
         />
       </div>
       <div className="w-80 h-60 m-auto mt-1 flex flex-col justify-center items-center space-y-5">

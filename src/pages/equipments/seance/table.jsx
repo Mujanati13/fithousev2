@@ -54,7 +54,7 @@ const TableSeance = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [changedFields, setChangedFields] = useState([]);
   const [isFormChanged, setIsFormChanged] = useState(false);
- 
+
   const commitChanges = ({ added, changed, deleted }) => {
     setData2((prevData) => {
       let updatedData = prevData;
@@ -137,7 +137,15 @@ const TableSeance = () => {
   const [selectedSeance, setSelectedSeance] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-
+  const [filters, setFilters] = useState({
+    cour: [],
+    coach: [],
+    salle: [],
+    jour: [],
+  });
+  const getUniqueColumnValues = (dataIndex) => {
+    return [...new Set(data.map((item) => item[dataIndex]))];
+  };
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -508,29 +516,26 @@ const TableSeance = () => {
           "https://fithouse.pythonanywhere.com/api/seance/",
           {
             headers: {
-              Authorization: `Bearer ${authToken}`, // Include the auth token in the headers
+              Authorization: `Bearer ${authToken}`,
             },
           }
         );
         const jsonData = await response.json();
 
-        // Replace "day_name" with "jour" in the jsonData
         const modifiedData = jsonData.data.map((item) => ({
           ...item,
-          Jour: item.day_name, // Create a new "jour" property with the value of "day_name"
-          Cours: item.cour, // Create a new "jour" property with the value of "day_name"
+          Jour: item.day_name,
+          Cours: item.cour,
         }));
 
-        // Ensure each row has a unique key
         const processedData = modifiedData.map((item, index) => ({
           ...item,
-          key: item.id_seance || index, // Assuming each item has a unique id, otherwise use index
+          key: item.id_seance || index,
         }));
 
         setData(processedData);
         setFilteredData(processedData);
 
-        // Generate columns based on the desired keys
         const desiredKeys = [
           "Cours",
           "coach",
@@ -541,23 +546,30 @@ const TableSeance = () => {
           "heure_fin",
           "capacity",
         ];
-        const generatedColumns = desiredKeys.map((key) => ({
-          title: capitalizeFirstLetter(key.replace(/\_/g, " ")), // Capitalize the first letter
-          dataIndex: key,
-          key,
-          render: (text, record) => {
-            if (key === "sitewebetablissement") {
-              return (
-                <a href={text} target="_blank" rel="noopener noreferrer">
-                  {text}
-                </a>
-              );
-            } else if (key === "date_inscription") {
-              return <Tag>{text}</Tag>;
-            }
-            return text;
-          },
-        }));
+
+        const generatedColumns = desiredKeys.map((key) => {
+          let column = {
+            title: capitalizeFirstLetter(key.replace(/\_/g, " ")),
+            dataIndex: key,
+            key,
+            render: (text) => text,
+          };
+
+          // Add filters for specific columns
+          if (["Cours", "coach", "salle", "Jour"].includes(key)) {
+            column = {
+              ...column,
+              filters: getUniqueColumnValues(key).map((value) => ({
+                text: value,
+                value,
+              })),
+              onFilter: (value, record) => record[key].indexOf(value) === 0,
+            };
+          }
+
+          return column;
+        });
+
         setColumns(generatedColumns);
         setLoading(false);
       } catch (error) {
@@ -582,11 +594,10 @@ const TableSeance = () => {
           }
         );
         const data = await response.json();
-        console.log('====================================');
-        console.log(CourDetils);
-        console.log('====================================');
         const formattedData = data.data.map((item) => {
-          const courseDetails = CourDetils.find(course => course.id_cour === item.id_cour);
+          const courseDetails = CourDetils.find(
+            (course) => course.id_cour === item.id_cour
+          );
           return {
             id: item.id_seance,
             title: item.cour,
@@ -671,11 +682,6 @@ const TableSeance = () => {
   };
 
   const handleModalSubmit = async () => {
-    // if (!isValidTimeRange()) {
-    //   message.warning("L'heure de fin doit être après l'heure de début");
-    //   return;
-    // }
-    console.log();
     try {
       // Check if the selected salle and coach are available
       const isSalleAvailable = availableSalles.some(
@@ -1080,6 +1086,8 @@ const TableSeance = () => {
     </Appointments.Appointment>
   );
 
+
+
   return (
     <div className="w-full p-2">
       <Drawer
@@ -1407,6 +1415,19 @@ const TableSeance = () => {
           columns={columns}
           dataSource={filteredData}
           rowSelection={rowSelection}
+          onChange={(pagination, filters, sorter) => {
+            setFilters(filters);
+            // Apply filters to data
+            let newFilteredData = data;
+            Object.keys(filters).forEach((key) => {
+              if (filters[key] && filters[key].length > 0) {
+                newFilteredData = newFilteredData.filter((item) =>
+                  filters[key].includes(item[key])
+                );
+              }
+            });
+            setFilteredData(newFilteredData);
+          }}
         />
       ) : (
         <div className="mt-5">
@@ -1433,7 +1454,13 @@ const TableSeance = () => {
           <Button icon={<EditOutlined />} onClick={handleUpdate} block>
             Mettre à jour la séance
           </Button>
-          <Button disabled={true} icon={<DeleteOutlined />} onClick={handleDelete} danger block>
+          <Button
+            disabled={true}
+            icon={<DeleteOutlined />}
+            onClick={handleDelete}
+            danger
+            block
+          >
             Supprimer la séance
           </Button>
           <Button onClick={handleReserve} type="primary" block>
